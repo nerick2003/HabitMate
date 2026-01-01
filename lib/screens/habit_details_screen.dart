@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/habit_model.dart';
 import '../services/db_service.dart';
 import '../widgets/completion_calendar.dart';
+import '../utils/color_utils.dart';
 import 'add_habit_screen.dart';
 
 class HabitDetailsScreen extends StatefulWidget {
@@ -95,13 +96,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
     return data;
   }
 
-  Color _getColorFromHex(String hex) {
-    try {
-      return Color(int.parse(hex.replaceAll('#', '0xFF')));
-    } catch (e) {
-      return const Color(0xFF6C63FF);
-    }
-  }
 
   IconData _getIconData(String iconName) {
     switch (iconName) {
@@ -132,7 +126,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = _getColorFromHex(widget.habit.color);
+    final color = ColorUtils.fromHex(widget.habit.color);
 
     return Scaffold(
       appBar: AppBar(

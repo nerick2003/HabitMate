@@ -33,26 +33,36 @@ class _NoteDialogState extends State<NoteDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text('Add Note - ${widget.habitName}'),
-      content: TextField(
-        controller: _noteController,
-        decoration: const InputDecoration(
-          hintText: 'How did it go? What did you learn?',
-          border: OutlineInputBorder(),
-        ),
-        maxLines: 5,
-        autofocus: true,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, null),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, _noteController.text.trim()),
-          child: const Text('Save'),
-        ),
-      ],
+      content: _buildNoteTextField(),
+      actions: _buildDialogActions(context),
     );
+  }
+
+  /// Builds the note text field
+  Widget _buildNoteTextField() {
+    return TextField(
+      controller: _noteController,
+      decoration: const InputDecoration(
+        hintText: 'How did it go? What did you learn?',
+        border: OutlineInputBorder(),
+      ),
+      maxLines: 5,
+      autofocus: true,
+    );
+  }
+
+  /// Builds the dialog action buttons
+  List<Widget> _buildDialogActions(BuildContext context) {
+    return [
+      TextButton(
+        onPressed: () => Navigator.pop(context, null),
+        child: const Text('Cancel'),
+      ),
+      ElevatedButton(
+        onPressed: () => Navigator.pop(context, _noteController.text.trim()),
+        child: const Text('Save'),
+      ),
+    ];
   }
 }
 

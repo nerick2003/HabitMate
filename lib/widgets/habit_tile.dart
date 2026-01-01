@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/habit_model.dart';
 import '../services/db_service.dart';
+import '../utils/color_utils.dart';
 import 'note_dialog.dart';
 
 class HabitTile extends StatefulWidget {
@@ -111,17 +112,9 @@ class _HabitTileState extends State<HabitTile> {
     widget.onCompleted?.call();
   }
 
-  Color _getColorFromHex(String hex) {
-    try {
-      return Color(int.parse(hex.replaceAll('#', '0xFF')));
-    } catch (e) {
-      return const Color(0xFF6C63FF);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final color = _getColorFromHex(widget.habit.color);
+    final color = ColorUtils.fromHex(widget.habit.color);
 
     return Card(
       elevation: 0,
@@ -144,33 +137,7 @@ class _HabitTileState extends State<HabitTile> {
           child: Row(
             children: [
               // Icon with gradient background
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      color,
-                      color.withValues(alpha: 0.7),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  _getIconData(widget.habit.icon),
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
+              _buildHabitIcon(color),
               const SizedBox(width: 16),
               // Content
               Expanded(
@@ -187,118 +154,12 @@ class _HabitTileState extends State<HabitTile> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        if (_streak > 0) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.local_fire_department,
-                                  size: 14,
-                                  color: Colors.orange,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '$_streak',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.orange,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        if (widget.habit.frequency == 'weekly')
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Weekly',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Theme.of(context).textTheme.bodyMedium?.color,
-                              ),
-                            ),
-                          ),
-                        if (_todayNote != null && _todayNote!.isNotEmpty) ...[
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.note,
-                            size: 14,
-                            color: color,
-                          ),
-                        ],
-                      ],
-                    ),
+                    _buildHabitMetadata(context, color),
                   ],
                 ),
               ),
               // Delete button and Checkbox
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Delete button
-                  if (widget.onDelete != null)
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        color: Colors.red,
-                        size: 22,
-                      ),
-                      onPressed: widget.onDelete,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      tooltip: 'Delete habit',
-                    ),
-                  if (widget.onDelete != null) const SizedBox(width: 12),
-                  // Checkbox with modern design
-                  if (_isLoading)
-                    const SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6C63FF)),
-                      ),
-                    )
-                  else
-                    Transform.scale(
-                      scale: 1.2,
-                      child: Checkbox(
-                        value: _isCompleted,
-                        onChanged: _toggleCompletion,
-                        activeColor: color,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              _buildActionButtons(context, color),
             ],
           ),
         ),
@@ -306,6 +167,162 @@ class _HabitTileState extends State<HabitTile> {
     );
   }
 
+  /// Builds the habit icon with gradient background
+  Widget _buildHabitIcon(Color color) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color,
+            color.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Icon(
+        _getIconData(widget.habit.icon),
+        color: Colors.white,
+        size: 28,
+      ),
+    );
+  }
+
+  /// Builds the habit metadata row (streak, frequency, note indicator)
+  Widget _buildHabitMetadata(BuildContext context, Color color) {
+    return Row(
+      children: [
+        if (_streak > 0) ...[
+          _buildStreakBadge(),
+          const SizedBox(width: 8),
+        ],
+        if (widget.habit.frequency == 'weekly') _buildFrequencyBadge(context),
+        if (_todayNote != null && _todayNote!.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          Icon(
+            Icons.note,
+            size: 14,
+            color: color,
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Builds the streak badge
+  Widget _buildStreakBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.local_fire_department,
+            size: 14,
+            color: Colors.orange,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '$_streak',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.orange,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds the frequency badge
+  Widget _buildFrequencyBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        'Weekly',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: Theme.of(context).textTheme.bodyMedium?.color,
+        ),
+      ),
+    );
+  }
+
+  /// Builds the action buttons (delete and checkbox)
+  Widget _buildActionButtons(BuildContext context, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (widget.onDelete != null) ...[
+          IconButton(
+            icon: const Icon(
+              Icons.delete_outline,
+              color: Colors.red,
+              size: 22,
+            ),
+            onPressed: widget.onDelete,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: 'Delete habit',
+          ),
+          const SizedBox(width: 12),
+        ],
+        _buildCompletionCheckbox(context, color),
+      ],
+    );
+  }
+
+  /// Builds the completion checkbox
+  Widget _buildCompletionCheckbox(BuildContext context, Color color) {
+    if (_isLoading) {
+      return const SizedBox(
+        width: 28,
+        height: 28,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.5,
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6C63FF)),
+        ),
+      );
+    }
+
+    return Transform.scale(
+      scale: 1.2,
+      child: Checkbox(
+        value: _isCompleted,
+        onChanged: _toggleCompletion,
+        activeColor: color,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6),
+        ),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+          width: 2,
+        ),
+      ),
+    );
+  }
+
+  /// Maps icon name string to IconData
   IconData _getIconData(String iconName) {
     switch (iconName) {
       case 'fitness_center':

@@ -7,6 +7,7 @@ class ExportService {
   
   ExportService._init();
 
+  /// Exports all habit data including habits and completions
   Future<Map<String, dynamic>> exportAllData() async {
     final habits = await DatabaseService.instance.getAllHabits();
     final allCompletions = <HabitCompletion>[];
@@ -26,18 +27,7 @@ class ExportService {
     };
   }
 
-  String exportToJSON() {
-    // This would be called after exportAllData
-    // For now, return empty - will be used with file picker
-    return '';
-  }
-
-  String exportToCSV() {
-    // CSV export format
-    // For now, return empty - will be used with file picker
-    return '';
-  }
-
+  /// Generates CSV format export data
   Future<String> generateCSV() async {
     final data = await exportAllData();
     final habits = (data['habits'] as List).map((h) => Habit.fromMap(h)).toList();
@@ -46,32 +36,41 @@ class ExportService {
         .toList();
 
     final buffer = StringBuffer();
-    
-    // Header
     buffer.writeln('Habit Name,Category,Completed Date,Completed,Note');
     
-    // Data rows
     for (var completion in completions) {
-      final habit = habits.firstWhere(
-        (h) => h.id == completion.habitId,
-        orElse: () => Habit(userId: completion.userId, name: 'Unknown'),
-      );
-      
-      final date = DateTime.parse(completion.completedAt.toIso8601String());
-      buffer.writeln(
-        '"${habit.name}","${habit.category}",'
-        '${date.toIso8601String()},'
-        '${completion.isCompleted ? "Yes" : "No"},'
-        '"${completion.note.replaceAll('"', '""')}"',
-      );
+      final habit = _findHabitForCompletion(habits, completion);
+      final csvRow = _formatCompletionAsCSV(habit, completion);
+      buffer.writeln(csvRow);
     }
     
     return buffer.toString();
   }
 
+  /// Generates JSON format export data
   Future<String> generateJSON() async {
     final data = await exportAllData();
     return const JsonEncoder.withIndent('  ').convert(data);
+  }
+
+  /// Finds the habit associated with a completion
+  Habit _findHabitForCompletion(List<Habit> habits, HabitCompletion completion) {
+    return habits.firstWhere(
+      (h) => h.id == completion.habitId,
+      orElse: () => Habit(userId: completion.userId, name: 'Unknown'),
+    );
+  }
+
+  /// Formats a completion as a CSV row
+  String _formatCompletionAsCSV(Habit habit, HabitCompletion completion) {
+    final date = DateTime.parse(completion.completedAt.toIso8601String());
+    final escapedNote = completion.note.replaceAll('"', '""');
+    final completedStatus = completion.isCompleted ? 'Yes' : 'No';
+    
+    return '"${habit.name}","${habit.category}",'
+        '${date.toIso8601String()},'
+        '$completedStatus,'
+        '"$escapedNote"';
   }
 }
 

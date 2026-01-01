@@ -4,6 +4,7 @@ import '../models/habit_model.dart';
 import '../services/db_service.dart';
 import '../services/notification_service.dart';
 import '../services/user_service.dart';
+import '../utils/color_utils.dart';
 
 class AddHabitScreen extends StatefulWidget {
   final Habit? habit; // For editing existing habit
@@ -183,17 +184,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> with SingleTickerProvid
     });
   }
 
-  Color _getColorFromHex(String hex) {
-    try {
-      return Color(int.parse(hex.replaceAll('#', '0xFF')));
-    } catch (e) {
-      return const Color(0xFF6C63FF);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    final color = _getColorFromHex(_selectedColor);
+    final color = ColorUtils.fromHex(_selectedColor);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
@@ -365,7 +359,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> with SingleTickerProvid
                       spacing: 14,
                       children: _colors.map((colorData) {
                         final isSelected = colorData['value'] == _selectedColor;
-                        final colorValue = _getColorFromHex(colorData['value']);
+                        final colorValue = ColorUtils.fromHex(colorData['value']);
                         return _ModernColorButton(
                           color: colorValue,
                           isSelected: isSelected,
@@ -693,7 +687,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> with SingleTickerProvid
               // Enhanced Save Button at bottom
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -724,7 +718,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> with SingleTickerProvid
                     onTap: _saveHabit,
                     borderRadius: BorderRadius.circular(24),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       alignment: Alignment.center,
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -732,13 +726,13 @@ class _AddHabitScreenState extends State<AddHabitScreen> with SingleTickerProvid
                           Icon(
                             Icons.check_circle_outline_rounded,
                             color: Colors.white,
-                            size: 24,
+                            size: 20,
                           ),
-                          SizedBox(width: 12),
+                          SizedBox(width: 10),
                           Text(
                             'Save Habit',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
                               color: Colors.white,
@@ -772,13 +766,13 @@ class _AddHabitScreenState extends State<AddHabitScreen> with SingleTickerProvid
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: _getColorFromHex(_selectedColor).withValues(alpha: 0.15),
+            color: ColorUtils.fromHex(_selectedColor).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             icon,
             size: 18,
-            color: _getColorFromHex(_selectedColor),
+            color: ColorUtils.fromHex(_selectedColor),
           ),
         ),
         const SizedBox(width: 12),
